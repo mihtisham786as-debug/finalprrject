@@ -1,37 +1,41 @@
 import bcrypt
 import os
 
-USERS_FILE = "users.txt"
+# The file where we will store the users' data (username, hashed password, and role)
+USERS_FILE = "users.txt"  # Initial storage in a text file
 
+# Available user roles
 ROLE_OPTIONS = {
     "1": "admin",
     "2": "analytics",
     "3": "cyber",
     "4": "data",
     "5": "it",
-    "6": "finance"1
+    "6": "finance"
 }
 
-RED = "\033[91m"
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-RESET = "\033[0m"
-
-# Hash Functions
+# Function to hash passwords
 def hash_password(password: str) -> bytes:
+    """Hashes the password using bcrypt."""
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
+# Function to verify passwords
 def verify_password(password: str, hashed: bytes) -> bool:
+    """Verifies if the provided password matches the hashed one."""
     return bcrypt.checkpw(password.encode(), hashed)
 
-# User File Management
+# Save user details (username, hashed password, and role) to the file
 def save_user(username: str, password_hash: bytes, role: str):
+    """Saves a new user to the users.txt file."""
     with open(USERS_FILE, "a") as f:
         f.write(f"{username},{password_hash.decode()},{role}\n")
 
+# Load all users from the file
 def load_users():
+    """Loads all users from the users.txt file."""
     if not os.path.exists(USERS_FILE):
         return {}
+
     users = {}
     with open(USERS_FILE, "r") as f:
         for line in f:
@@ -39,15 +43,16 @@ def load_users():
             users[username] = {"hash": pwd_hash.encode(), "role": role}
     return users
 
-# User Registration 
+# Function to register a new user
 def register_user():
-    print(f"\n{YELLOW}--- User Registration ---{RESET}")
+    """Handles the user registration process."""
+    print("\n--- User Registration ---")
     username = input("Enter username: ")
-    password = input("Enter password: ")          # visible input for Mac
+    password = input("Enter password: ")
     confirm_password = input("Confirm password: ")
 
     if password != confirm_password:
-        print(f"{RED}❌ Passwords do not match!{RESET}")
+        print("❌ Passwords do not match!")
         return
 
     print("\nSelect a role:")
@@ -56,44 +61,48 @@ def register_user():
 
     role_choice = input("Enter role number: ")
     if role_choice not in ROLE_OPTIONS:
-        print(f"{RED}❌ Invalid role number!{RESET}")
+        print("❌ Invalid role number!")
         return
 
-    role = ROLE_OPTIONS[role_choice]
     users = load_users()
     if username in users:
-        print(f"{RED}❌ Username already exists!{RESET}")
+        print("❌ Username already exists!")
         return
 
     hashed = hash_password(password)
-    save_user(username, hashed, role)
-    print(f"{GREEN}✅ User '{username}' registered successfully!{RESET}")
-    print(f"{GREEN}🎉 Welcome {username} to the {role} department!{RESET}")
+    save_user(username, hashed, ROLE_OPTIONS[role_choice])
 
-# User Login 
+    print(f"✅ User '{username}' registered successfully!")
+    print(f"🎉 Role assigned: {ROLE_OPTIONS[role_choice]}")
+
+# Function to login a user
 def login_user():
-    print(f"\n{YELLOW}--- Login ---{RESET}")
+    """Handles the user login process."""
+    print("\n--- Login ---")
     username = input("Enter username: ")
     password = input("Enter password: ")
+
     users = load_users()
     if username not in users:
-        print(f"{RED}❌ User not found!{RESET}")
+        print("❌ User not found!")
         return
-    stored_hash = users[username]["hash"]
-    role = users[username]["role"]
-    if verify_password(password, stored_hash):
-        print(f"{GREEN}✅ Login successful! Welcome {username}!{RESET}")
-        print(f"{GREEN}🎉 Role: {role}{RESET}")
-    else:
-        print(f"{RED}❌ Incorrect password!{RESET}")
 
-# Main Menu 
+    if verify_password(password, users[username]["hash"]):
+        print(f"✅ Login successful! Welcome {username}!")
+        print(f"🎉 Role: {users[username]['role']}")
+    else:
+        print("❌ Incorrect password!")
+
+# Main menu function for user interaction
 def main():
+    """Main menu for user registration and login."""
+    print("Program started!")  # Debugging statement to confirm the script is running
     while True:
-        print(f"\n{YELLOW}--- AUTH MENU ---{RESET}")
+        print("\n--- AUTH MENU ---")
         print("1. Register")
         print("2. Login")
         print("3. Exit")
+
         choice = input("Select an option: ")
 
         if choice == "1":
@@ -101,11 +110,11 @@ def main():
         elif choice == "2":
             login_user()
         elif choice == "3":
-            print(f"{GREEN}Exiting...{RESET}")
+            print("Exiting...")
             break
         else:
-            print(f"{RED}❌ Invalid choice!{RESET}")
+            print("❌ Invalid choice!")
 
-# 1Run Program 
+# Run Program
 if __name__ == "__main__":
     main()
